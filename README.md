@@ -1,4 +1,4 @@
 # tools
 HTML tools
 
-- [Network Compass](network-compass/) — a private, browser-based LinkedIn relationship mapper. Import your own Connections.csv and optional Messages.csv; nothing is uploaded.
+- [Network Compass app](https://marcoa108.github.io/tools/network-compass/) — explore LinkedIn relationships privately in your browser. [Source and instructions](network-compass/).
