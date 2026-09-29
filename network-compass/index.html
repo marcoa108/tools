@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="A private workspace for exploring LinkedIn relationships and planning useful engagement.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>Network Compass · Private relationship workspace</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2313243a'/%3E%3Cpath d='M32 8 45 32 32 56 19 32Z' fill='none' stroke='%2353d5c5' stroke-width='3'/%3E%3Cpath d='m32 16 5 16-5 16-5-16Z' fill='%23f2c76e'/%3E%3Ccircle cx='32' cy='32' r='3' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Workspace navigation and filters">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✦</span><span>Network<br><strong>Compass</strong></span></div>
+      <div class="side-nav" role="tablist" aria-label="Workspace view">
+        <button class="nav-button active" id="nav-explore" role="tab" aria-selected="true" aria-controls="explore-view">Explore <span>↗</span></button>
+        <button class="nav-button" id="nav-groups" role="tab" aria-selected="false" aria-controls="groups-view">Priority groups <span id="group-nav-count">0</span></button>
+      </div>
+      <div class="side-section" id="filters-panel">
+        <div class="section-heading"><h2>Refine the map</h2><button class="text-button" id="reset-filters" type="button">Reset</button></div>
+        <label class="field-label" for="query">Name, company or role</label>
+        <input id="query" type="search" placeholder="e.g. founder, retail…" autocomplete="off">
+        <label class="field-label" for="filter-circle">Relationship circle</label>
+        <select id="filter-circle"><option value="">All circles</option><option>Peer leader</option><option>Client</option><option>Potential client</option><option>Collaborator</option><option>Connector</option><option>Other</option><option value="__empty">Unassigned</option></select>
+        <label class="field-label" for="filter-theme">Value theme</label>
+        <select id="filter-theme"><option value="">All themes</option><option>Growth</option><option>Transformation</option><option>AI & technology</option><option>Leadership</option><option>Peer advisory</option><option>Other</option><option value="__empty">Unassigned</option></select>
+        <label class="field-label" for="filter-fit">Strategic fit</label>
+        <select id="filter-fit"><option value="">Any fit</option><option value="3">High</option><option value="2">Medium</option><option value="1">Low</option><option value="0">Not assessed</option></select>
+        <label class="field-label" for="filter-warmth">Relationship strength</label>
+        <select id="filter-warmth"><option value="">Any strength</option><option value="3">Trusted</option><option value="2">Known</option><option value="1">New / distant</option><option value="0">Not assessed</option></select>
+        <label class="field-label" for="filter-signal">Role signal</label>
+        <select id="filter-signal"><option value="">All roles</option><option>Founder / owner</option><option>Executive leader</option><option>Marketing</option><option>Technology</option><option>People / talent</option><option value="__other">Other roles</option></select>
+        <label class="field-label" for="filter-recency">Connected</label>
+        <select id="filter-recency"><option value="">Any time</option><option value="90">Last 90 days</option><option value="365">Last year</option><option value="older">Over a year ago</option></select>
+        <div id="message-filters" class="message-filters" hidden>
+          <h2>Communications</h2>
+          <label class="field-label" for="filter-contacted">Contacted by me</label>
+          <select id="filter-contacted"><option value="">Any</option><option value="yes">Yes</option><option value="no">No</option></select>
+          <label class="field-label" for="filter-relationship">Two-way relationship</label>
+          <select id="filter-relationship"><option value="">Any</option><option value="yes">Yes</option><option value="no">No recorded exchange</option></select>
+          <label class="field-label" for="filter-response">Response to my message</label>
+          <select id="filter-response"><option value="">Any</option><option value="replied">Replied</option><option value="no-reply">No reply recorded</option></select>
+          <label class="field-label" for="filter-frequency">Message frequency</label>
+          <select id="filter-frequency"><option value="">Any</option><option value="active">3+ messages</option><option value="light">1–2 messages</option><option value="none">No messages</option></select>
+          <label class="field-label" for="filter-vistage">Vistage outreach</label>
+          <select id="filter-vistage"><option value="">Any</option><option value="both">Both phrases</option><option value="possible">One phrase · review</option><option value="none">No phrase match</option></select>
+        </div>
+      </div>
+      <div class="privacy-note"><span class="lock" aria-hidden="true">◈</span><div><strong>Private by design</strong><p>Your file and notes stay in this browser. Nothing is sent or published.</p></div></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow">RELATIONSHIP WORKSPACE</p><h1 id="page-title">Explore your network</h1></div>
+        <div class="top-actions"><span class="local-badge">● On this device</span><button class="button secondary mobile-filters" id="filter-toggle" type="button" aria-expanded="false" aria-controls="filters-panel">Filters</button><button class="button secondary" id="backup-button" type="button" hidden>Download backup</button><button class="button secondary" id="messages-button" type="button" hidden>Import messages</button><button class="button primary" id="import-button" type="button">Import connections</button><input id="file-input" type="file" accept=".csv,.json,text/csv,application/json" hidden></div>
+      </header>
+      <div class="content">
+        <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+        <section id="explore-view" role="tabpanel" aria-labelledby="nav-explore">
+          <div id="empty-state" class="empty-state">
+            <div class="empty-art" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div><p class="eyebrow">START HERE</p><h2>Find the relationships worth developing.</h2><p>Import your LinkedIn connections CSV to explore roles and companies, then add your own context to reveal the right groups. The file is processed on this device.</p><div class="empty-actions"><button class="button primary" id="empty-import" type="button">Choose CSV export</button><button class="button secondary" id="sample-button" type="button">Explore sample data</button></div><p class="hint">LinkedIn export: Settings &amp; Privacy → Data privacy → Get a copy of your data → Connections. A JSON backup from this app can also be restored.</p></div>
+          </div>
+          <div id="workspace" hidden>
+            <div class="summary-row">
+              <div class="stat"><span>Connections</span><strong id="stat-total">0</strong><small>in this workspace</small></div>
+              <div class="stat"><span>Current view</span><strong id="stat-filtered">0</strong><small>matching filters</small></div>
+              <div class="stat"><span>High fit</span><strong id="stat-priority">0</strong><small>across your network</small></div>
+              <div class="stat"><span>To assess</span><strong id="stat-unreviewed">0</strong><small>no fit or strength yet</small></div>
+            </div>
+            <div id="messages-prompt" class="messages-prompt" hidden><div><strong>Add communication context</strong><p>Import Messages.csv to see who you contacted, who replied, communication frequency and Vistage phrase matches.</p></div><button class="button outline" id="messages-prompt-button" type="button">Import messages</button></div>
+            <section id="communications-summary" class="communications-summary" aria-labelledby="communications-heading" hidden>
+              <div class="communications-heading"><div><p class="eyebrow">LINKEDIN COMMUNICATIONS</p><h2 id="communications-heading">What the conversations show</h2></div><span id="messages-imported-at"></span></div>
+              <div class="communications-metrics"><button id="summary-two-way" type="button"><strong id="messages-two-way">0</strong><span>Two-way exchanges</span></button><button id="summary-no-reply" type="button"><strong id="messages-no-reply">0</strong><span>Contacted · no reply recorded</span></button><button id="summary-vistage" type="button"><strong id="messages-vistage">0</strong><span>Vistage · both phrases</span></button><div><strong id="messages-matched">0</strong><span>Messages matched to connections</span></div></div>
+              <p id="messages-coverage" class="coverage-note"></p>
+            </section>
+            <div class="workspace-grid">
+              <div class="primary-column">
+                <section class="card map-card" aria-labelledby="map-heading">
+                  <div class="card-header"><div><p class="eyebrow">OPPORTUNITY MAP</p><h2 id="map-heading">Fit × relationship strength</h2></div><span id="map-subtitle" class="card-meta"></span></div>
+                  <div class="map-wrap"><div class="axis-label y-axis">Strategic fit</div><div class="map-inner"><div class="matrix" id="matrix" aria-label="Select a segment to filter connections"></div><div class="x-axis">Relationship strength →</div></div></div>
+                  <div class="map-foot"><span><i class="legend-dot"></i> Deeper color = more people in the segment</span><button class="text-button" id="unassessed-button" type="button">View unassessed <span id="unassessed-count"></span></button></div>
+                </section>
+                <section class="card people-card" aria-labelledby="people-heading">
+                  <div class="card-header list-head"><div><p class="eyebrow">CONNECTIONS</p><h2 id="people-heading">People in view <span id="list-count"></span></h2></div><div class="list-actions"><select id="sort-by" aria-label="Sort connections"><option value="recent">Recently connected</option><option value="name">Name A–Z</option><option value="company">Company A–Z</option><option value="fit">Highest fit</option></select><button class="button dark" id="save-group" type="button">Save as group</button></div></div>
+                  <div class="presets" aria-label="Quick views"><span>Quick views</span><button data-preset="founders" type="button">Founders</button><button data-preset="executives" type="button">Executives</button><button data-preset="recent" type="button">New connections</button><button data-preset="priority" type="button">High fit</button><button data-preset="vistage" type="button" id="vistage-preset" hidden>Vistage outreach</button></div>
+                  <div id="active-filters" class="active-filters" hidden></div>
+                  <div id="people-list" class="people-list"></div>
+                  <div class="pagination"><span id="page-info"></span><div><button id="prev-page" type="button" aria-label="Previous page">←</button><button id="next-page" type="button" aria-label="Next page">→</button></div></div>
+                </section>
+              </div>
+              <aside class="insight-column"><section class="card insight-card"><p class="eyebrow">WHERE TO START</p><h2 id="insight-title">Shape your next group</h2><p id="insight-copy">Use role signals and your own relationship notes to narrow this view. Save a group when the people share a useful reason to connect.</p><div id="insight-breakdown"></div><button class="button outline" id="insight-save" type="button">Turn this view into a group →</button></section><section class="guide-card"><p class="eyebrow">A USEFUL LENS</p><p>Start with what you can offer each person: a relevant introduction, a practical insight, a thoughtful question or an invitation to compare experience.</p></section></aside>
+            </div>
+          </div>
+        </section>
+        <section id="groups-view" role="tabpanel" aria-labelledby="nav-groups" hidden>
+          <div class="groups-intro"><div><p class="eyebrow">FROM SEGMENT TO ACTION</p><h2>Priority groups</h2><p>Keep a clear reason for engaging each group and a useful next step. Plans here are private notes; nothing is sent.</p></div><button class="button primary" id="groups-create" type="button">Save current view</button></div>
+          <div id="groups-list" class="groups-list"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="person-dialog" class="dialog person-dialog" aria-labelledby="person-title"><form method="dialog" class="dialog-layout"><div class="dialog-head"><div><p class="eyebrow">RELATIONSHIP CONTEXT</p><h2 id="person-title"></h2><p id="person-role"></p></div><button class="icon-button" value="cancel" aria-label="Close person details">×</button></div><div class="dialog-body"><div class="profile-line"><span id="person-company"></span><a id="person-link" target="_blank" rel="noopener noreferrer" hidden>Open LinkedIn ↗</a></div><section id="person-comms" class="person-comms" aria-label="LinkedIn communication evidence" hidden><h3>LinkedIn communication evidence</h3><div id="person-comms-stats"></div><p id="person-comms-note"></p></section><div class="form-grid"><label>Relationship circle<select id="edit-circle"><option value="">Unassigned</option><option>Peer leader</option><option>Client</option><option>Potential client</option><option>Collaborator</option><option>Connector</option><option>Other</option></select></label><label>Value theme<select id="edit-theme"><option value="">Unassigned</option><option>Growth</option><option>Transformation</option><option>AI & technology</option><option>Leadership</option><option>Peer advisory</option><option>Other</option></select></label><label>Strategic fit<select id="edit-fit"><option value="0">Not assessed</option><option value="3">High</option><option value="2">Medium</option><option value="1">Low</option></select></label><label>Relationship strength<select id="edit-warmth"><option value="0">Not assessed</option><option value="3">Trusted</option><option value="2">Known</option><option value="1">New / distant</option></select></label><label>Last meaningful contact<input id="edit-last-touch" type="date"></label><label>Location (optional)<input id="edit-location" type="text" maxlength="100" placeholder="City or region"></label></div><label class="full-label">What matters to this person? / How could I help?<textarea id="edit-note" rows="4" maxlength="2000" placeholder="A shared challenge, an introduction, a useful resource…"></textarea></label></div><div class="dialog-actions"><button class="button secondary" value="cancel">Cancel</button><button class="button primary" id="person-save" value="save">Save context</button></div></form></dialog>
+  <dialog id="messages-dialog" class="dialog messages-dialog" aria-labelledby="messages-title"><form id="messages-form" class="dialog-layout"><div class="dialog-head"><div><p class="eyebrow">SECOND IMPORT</p><h2 id="messages-title">Import LinkedIn messages</h2><p>Use Messages.csv from your LinkedIn data archive.</p></div><button class="icon-button" id="messages-close" type="button" aria-label="Close message import">×</button></div><div class="dialog-body"><p class="import-explanation">The analysis happens in this browser. Only counts, dates and matching keyword labels are saved; message bodies are discarded after import. Importing the file again replaces the previous message analysis.</p><label class="full-label">Your name as shown in the export<input id="messages-own-name" type="text" required maxlength="120" value="Marco Arciglio" autocomplete="name"></label><label class="full-label">Your LinkedIn profile URL (optional, improves matching)<input id="messages-own-url" type="url" placeholder="https://www.linkedin.com/in/…"></label><label class="full-label">Messages CSV<input id="messages-file" type="file" accept=".csv,text/csv" required></label><p class="import-explanation">“Existing relationship: Yes” means both sides exchanged LinkedIn messages. Vistage is flagged when one of your outgoing messages contains both “board” and “peer advisory”; a single phrase is marked for review.</p><p id="messages-error" class="import-error" role="alert" hidden></p></div><div class="dialog-actions"><button class="button secondary" id="messages-cancel" type="button">Cancel</button><button class="button primary" id="messages-submit" type="submit">Analyze messages</button></div></form></dialog>
+  <dialog id="group-dialog" class="dialog group-dialog" aria-labelledby="group-title"><form method="dialog" class="dialog-layout"><div class="dialog-head"><div><p class="eyebrow">GROUP PLAN</p><h2 id="group-title">Save priority group</h2><p id="group-scope"></p></div><button class="icon-button" value="cancel" aria-label="Close group editor">×</button></div><div class="dialog-body"><label class="full-label">Group name<input id="group-name" type="text" maxlength="80" required placeholder="e.g. Retail leaders navigating AI"></label><label class="full-label">Engagement objective (next 90 days)<textarea id="group-objective" rows="2" maxlength="500" placeholder="e.g. Reconnect with 8 leaders to learn what is changing in their teams"></textarea></label><div class="idea-section"><div class="section-heading"><h3>Value ideas to adapt</h3><button type="button" class="text-button" id="refresh-ideas">Shuffle ideas</button></div><p>Use an idea as a starting point, then make it specific to the person.</p><div id="idea-list" class="idea-list"></div></div><label class="full-label">Your next step<textarea id="group-next" rows="2" maxlength="500" placeholder="e.g. Pick three people and write a personal note about a shared topic"></textarea></label></div><div class="dialog-actions"><button class="button secondary" value="cancel">Cancel</button><button class="button primary" id="group-save" value="save">Save group</button></div></form></dialog>
+  <dialog id="confirm-dialog" class="dialog confirm-dialog" aria-labelledby="confirm-title"><div class="dialog-layout"><div class="dialog-head"><h2 id="confirm-title">Replace local workspace?</h2><button class="icon-button" id="confirm-close" aria-label="Close confirmation">×</button></div><div class="dialog-body"><p id="confirm-copy"></p></div><div class="dialog-actions"><button class="button secondary" id="confirm-cancel">Cancel</button><button class="button danger" id="confirm-yes">Continue</button></div></div></dialog>
+</body>
+</html>

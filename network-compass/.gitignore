@@ -1,0 +1,5 @@
+# Keep personal LinkedIn exports and local workspace backups out of version control.
+*.csv
+*backup*.json
+.openai/
+.DS_Store
