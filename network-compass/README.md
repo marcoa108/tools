@@ -2,9 +2,11 @@
 
 A private, browser-based workspace for exploring LinkedIn connections, understanding communication history, and planning useful engagement. It is a static web app: no server, account, API key, or build step is required.
 
+**[Open Network Compass](https://marcoa108.github.io/tools/network-compass/)**
+
 ## Use your own copy
 
-1. Open the hosted app, or run the files locally with a small web server:
+1. Open the hosted app above, or run the files locally with a small web server:
 
    ```sh
    python3 -m http.server 8000
@@ -28,7 +30,7 @@ The raw message bodies are read in memory for analysis and are not saved in the 
 
 The app stores imported data in IndexedDB in the browser that opens it. Its Content Security Policy blocks network connections. This repository contains only application code and fictional sample entries; it contains no LinkedIn export, personal workspace, or Sites hosting configuration. There is no sync between devices or between users, even if they open the same hosted URL. Private browsing or clearing site data can erase the local workspace, so download backups regularly.
 
-Anyone can host this static code, including someone using Claude rather than ChatGPT. For GitHub Pages, open the repository's **Settings → Pages**, choose **Deploy from a branch**, select `main` and `/ (root)`, and save. Then open the `network-compass/` path under the generated Pages URL. Each visitor's imported data still remains in their own browser. The original Sites deployment is separate and remains under its own access settings.
+Anyone can host this static code, including someone using Claude rather than ChatGPT. This repository serves the app through GitHub Pages at the link above. If you fork it into another repository, enable Pages in **Settings → Pages** using `main` and `/ (root)`, then open the `network-compass/` path under your generated Pages URL. Each visitor's imported data still remains in their own browser. The original Sites deployment is separate and remains under its own access settings.
 
 This tool does not send messages, post content, or access LinkedIn automatically. It works from files you choose to import.
 
