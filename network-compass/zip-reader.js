@@ -1,7 +1,7 @@
-/* Read only the LinkedIn CSVs needed by Network Compass. No archive bytes leave this page. */
+/* Read only supported LinkedIn and Google Contacts exports in this browser. */
 (() => {
   'use strict';
-  const allowed = new Set(['connections.csv','messages.csv','invitations.csv','profile.csv','recommendations_given.csv','recommendations_received.csv','endorsement_given_info.csv','endorsement_received_info.csv']);
+  const allowed = new Set(['connections','messages','invitations','profile','recommendations_given','recommendations_received','endorsement_given_info','endorsement_received_info']);
   const maxEntry = 80 * 1024 * 1024, maxTotal = 120 * 1024 * 1024;
   const decoder = new TextDecoder('utf-8', { fatal: false });
   async function readLinkedInZip(file) {
@@ -24,11 +24,12 @@
       const next = p + 46 + nameLength + extraLength + commentLength;
       if (next > end) throw new Error('Damaged ZIP directory.');
       const name = decoder.decode(bytes.subarray(p + 46, p + 46 + nameLength)); p = next;
-      if (name.includes('\\') || name.startsWith('/') || name.split('/').includes('..')) continue;
+      if (name.includes('\\') || name.startsWith('/') || name.includes('\0') || name.split('/').includes('..')) continue;
       const parts = name.split('/');
-      if (parts.length > 2) continue;
-      const key = parts.at(-1).toLowerCase();
-      if (!allowed.has(key)) continue;
+      if (parts.length > 8 || name.length > 500) continue;
+      const base = parts.at(-1).toLowerCase(),stem=base.replace(/\.csv$/,'');
+      const key=allowed.has(stem)?stem+'.csv':base.endsWith('.vcf')?'vcard/'+name:['contacts.csv','google.csv'].includes(base)?'contactcsv/'+name:'';
+      if (!key) continue;
       if (entries.has(key)) throw new Error(`The ZIP contains multiple ${key} files. Choose an unambiguous export.`);
       if (flags & 1 || ![0,8].includes(method) || compressed === 0xffffffff || uncompressed === 0xffffffff || uncompressed > maxEntry || (total += uncompressed) > maxTotal) throw new Error(`Cannot safely read ${key} from this ZIP.`);
       entries.set(key, { method, compressed, uncompressed, offset, name: key });
@@ -58,7 +59,7 @@
       if (data.length !== entry.uncompressed || data.length > maxEntry) throw new Error(`Size check failed for ${key}.`);
       result[key] = decoder.decode(data);
     }
-    if (!Object.keys(result).length) throw new Error('No supported LinkedIn CSVs were found in the ZIP.');
+    if (!Object.keys(result).length) throw new Error('No supported LinkedIn or Google Contacts files were found in the ZIP.');
     return result;
   }
   globalThis.readLinkedInZip = readLinkedInZip;

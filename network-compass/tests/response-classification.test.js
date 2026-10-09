@@ -9,6 +9,7 @@ const source = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8').rep
 );
 const context = { Date, URL, Map, Set, Array, Number, String, JSON };
 vm.createContext(context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'contacts.js'), 'utf8'), context);
 vm.runInContext(source, context);
 const app = context.testAPI;
 

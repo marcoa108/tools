@@ -1,0 +1,28 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const vm=require('node:vm');
+const zlib=require('node:zlib');
+const context={Date,URL,Map,Set,Array,Number,String,JSON,Blob,TextDecoder,DecompressionStream,Uint8Array,DataView,Promise};
+vm.createContext(context);
+for(const file of ['zip-reader.js','contacts.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context);
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../app.js'),'utf8').replace('  init();\n})();','  globalThis.testAPI={parseCSV,csvRows,parseGoogleFiles,parseBackup,normalizePerson,reconcileGoogleContacts,addContactsToPeople,setState(v){state=v},getState(){return state}};\n})();'),context);
+const app=context.testAPI,google=context.NetworkContacts;
+const csv=rows=>rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n');
+const linkedIn='Notes:\n"Email addresses may be missing."\n\n'+csv([['First Name','Last Name','URL','Email Address','Company','Position','Connected On'],['Alice','Smith','https://www.linkedin.com/in/alice/','','North','CEO','2026-01-01'],['Pat','Lee','https://www.linkedin.com/in/pat/','','East','Founder','2026-02-01']]);
+const people=app.parseCSV(linkedIn);assert.equal(people.length,2);
+const contactsCSV=csv([['First Name','Middle Name','Last Name','Organization Name','Labels','E-mail 1 - Value','Address 1 - City','Address 1 - Region','Address 1 - Country'],['Alice','','Smith','North','Business','alice@example.test','Milano','Lombardia','Italy'],['Pat','','Lee','East','Business','pat.one@example.test','','',''],['Pat','','Lee','East','Business','pat.two@example.test','','',''],['Kim','','West','','Family','kim@example.test','','','']]);
+let contacts=google.parseCSV(contactsCSV,app.csvRows);assert.equal(contacts.length,4);
+let report=google.match(contacts,people);assert.equal(report.linked,1);assert.equal(report.ambiguous,2);
+assert.equal(contacts.find(c=>c.name==='Alice Smith').linkedPersonId,people[0].id);
+assert.equal(contacts.filter(c=>c.name==='Pat Lee'&&c.linkedPersonId).length,0);
+contacts.find(c=>c.name==='Kim West').category='Personal';
+contacts=google.combine(contacts,google.parseCSV(contactsCSV,app.csvRows));
+assert.equal(contacts.find(c=>c.name==='Kim West').category,'Personal','User category survives a repeat import');
+const vcf=['BEGIN:VCARD','VERSION:3.0','N:Smith;Alice;;;','FN:Alice Smith','item1.EMAIL;TYPE=INTERNET:alice@example.test','CATEGORIES:Business','END:VCARD','BEGIN:VCARD','VERSION:3.0','N:West;Kim;;;','FN:Kim West','item1.EMAIL:kim@example.test','END:VCARD'].join('\r\n');
+function zip(files){const local=[],central=[];let offset=0;for(const [name,text] of Object.entries(files)){const n=Buffer.from(name),raw=Buffer.from(text),data=zlib.deflateRawSync(raw),l=Buffer.alloc(30),c=Buffer.alloc(46);l.writeUInt32LE(0x04034b50,0);l.writeUInt16LE(8,8);l.writeUInt32LE(data.length,18);l.writeUInt32LE(raw.length,22);l.writeUInt16LE(n.length,26);c.writeUInt32LE(0x02014b50,0);c.writeUInt16LE(8,10);c.writeUInt32LE(data.length,20);c.writeUInt32LE(raw.length,24);c.writeUInt16LE(n.length,28);c.writeUInt32LE(offset,42);local.push(l,n,data);central.push(c,n);offset+=l.length+n.length+data.length;}const dir=Buffer.concat(central),end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50,0);end.writeUInt16LE(Object.keys(files).length,8);end.writeUInt16LE(Object.keys(files).length,10);end.writeUInt32LE(dir.length,12);end.writeUInt32LE(offset,16);return Buffer.concat([...local,dir,end]);}
+(async()=>{const archive=zip({'Takeout/Contacts/All Contacts/All Contacts.vcf':vcf,'Takeout/Contacts/Family/Family.vcf':vcf,'Takeout/SearchQueries.csv':'ignored'});const files=await context.readLinkedInZip({size:archive.length,arrayBuffer:async()=>archive.buffer.slice(archive.byteOffset,archive.byteOffset+archive.length)});assert.equal(Object.keys(files).length,2);const parsed=app.parseGoogleFiles(files);assert.equal(parsed.length,2,'Repeated vCards across label folders are deduplicated');
+  app.setState({version:1,people,groups:[],invites:[],contacts,contactCategories:['Personal','Family','Business','Community'],companies:{north:{name:'North',industry:'Manufacturing',employees:120,currency:'EUR',years:[{year:2025,revenue:2000000,profit:120000}]}},sample:false,messagesMeta:null});app.reconcileGoogleContacts();assert.deepEqual([...app.getState().people[0].googleEmails],['alice@example.test']);assert.equal(app.getState().people[0].city,'Milano');assert.equal(app.getState().people[0].region,'Lombardia');assert.equal(app.getState().people[0].country,'Italy');assert.equal(app.getState().people[1].googleEmails.length,0,'Duplicate names do not attach emails');
+  const kim=contacts.find(c=>c.name==='Kim West');assert.equal(app.addContactsToPeople([kim.id]),1);assert.equal(app.getState().people.find(p=>p.name==='Kim West').source,'google');assert.equal(app.getState().people.length,3);
+  const restored=app.parseBackup(JSON.stringify(app.getState()));assert.equal(restored.contacts.find(c=>c.name==='Kim West').category,'Personal');assert.equal(restored.companies.north.years[0].revenue,2000000);assert.equal(restored.people[0].city,'Milano');console.log('Google CSV/VCF, matching, ambiguity, promotion, company/location fields and backup passed.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

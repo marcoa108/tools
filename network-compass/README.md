@@ -12,12 +12,13 @@ A private, browser-based workspace for exploring LinkedIn connections, understan
    python3 -m http.server 8000
    ```
 
-   Then visit `http://localhost:8000`. Keep `index.html`, `app.js`, `zip-reader.js`, and `style.css` together.
+   Then visit `http://localhost:8000`. Keep `index.html`, `app.js`, `contacts.js`, `zip-reader.js`, and `style.css` together.
 2. Export your LinkedIn data and choose the ZIP using **Import LinkedIn ZIP or CSV**. The import preview shows what was recognized before anything is saved. You can still import `Connections.csv` on its own or use **Explore sample data**.
-3. The ZIP importer reads `Connections.csv`, `messages.csv`, `Invitations.csv`, recommendations, accepted endorsements, and `Profile.csv` for your name. Only these allowlisted files are extracted. You can also import `messages.csv` separately using **Import messages** and entering your identity.
+3. The ZIP importer reads `Connections.csv`, `Messages.csv`, `Invitations.csv`, recommendations, accepted endorsements, and `Profile.csv` for your name. It accepts capitalization variants and extensionless `Connections` and `Messages` files. It skips the introductory notes above the `First Name` header in a connections export. Only supported files are extracted. You can also import `Messages.csv` separately using **Import messages** and entering your identity.
 4. Use **Invitation review** for people absent from the current connections export. Mark interesting prospects and record a personal next step. The export does not include invitation outcome, so the list does not assert that an invitation is pending.
-5. Filter connections by role, company, date, relationship circle, theme, fit, warmth, and communications. Review people, save priority groups, and write an objective and next step for each group.
-6. Use **Download backup** to save your annotations, prospect queue, and derived communication summaries as JSON. Import that backup to restore this browser workspace or move it to another device.
+5. In **Contacts review**, import a Google Contacts CSV or Google Takeout ZIP containing CSV or vCard (`.vcf`) files. You can import contacts before or after LinkedIn. The app combines repeated vCards, matches a contact to a LinkedIn person only when the normalized full name is unique on both sides, and attaches that contact's email addresses and available city, region, and country. Ambiguous names stay in review. The main network contains only LinkedIn connections and contacts you explicitly add. Filter the review queue, choose Personal, Family, Business or a custom category, and add selected contacts to the network when appropriate.
+6. Filter the network by role, company, date, relationship circle, theme, fit, warmth, communications, country, region, and city. Review a person to edit their location and open a shared company record for industry, employee count, currency, and annual revenue and profit. Company numbers are manual fields; the app does not fetch financial data. Save priority groups with an objective, value ideas, and a next step.
+7. Use **Download backup** to save your people, contact categories, company records, prospect queue, and derived communication summaries as JSON. Import that backup to restore this browser workspace or move it to another device.
 
 LinkedIn may change the names and columns of its exports. The app expects connection names and message columns including `FROM`, `TO`, `DATE`, and `CONTENT`. ZIP imports are limited to 100 MB compressed and supported CSVs to 120 MB uncompressed in total.
 
@@ -25,7 +26,7 @@ LinkedIn may change the names and columns of its exports. The app expects connec
 
 After importing messages, the app shows outgoing and incoming counts, the latest exchange, recent activity, and communication frequency. A two-way exchange means at least one matched message in each direction, even if your message was the latest one or the messages appear in separate threads. The “no incoming” group contains only contacts with an outgoing message and no matched incoming message in the import. It excludes unclear and group conversations. A **Vistage** match means an outgoing message contains both `board` and `peer advisory`; a one-phrase match is marked for review. Phrase matches are clues, not a claim about the person's interest or consent.
 
-The raw message bodies and invitation note text are read in memory for analysis and are not saved in the workspace or backup. Invitation notes are not counted as conversation replies. Only accepted endorsements are displayed as relationship signals. The backup contains connection information, your annotations and prospect actions, and derived summaries; treat it as sensitive.
+The raw message bodies and invitation note text are read in memory for analysis and are not saved in the workspace or backup. Google Contacts phone numbers and notes are ignored; names, emails, organizations, source labels, and available location fields are stored locally. Invitation notes are not counted as conversation replies. Only accepted endorsements are displayed as relationship signals. The backup contains connection and contact information, your annotations and prospect actions, company fields, and derived summaries; treat it as sensitive.
 
 ## Privacy and sharing
 
@@ -37,10 +38,11 @@ This tool does not send messages, post content, or access LinkedIn automatically
 
 ## Development
 
-Edit the four site files directly. No dependencies or build command are needed. The app uses modern browser APIs such as IndexedDB, `<dialog>`, `structuredClone`, and `DecompressionStream('deflate-raw')` for ZIP files.
+Edit the five site files directly. No dependencies or build command are needed. The app uses modern browser APIs such as IndexedDB, `<dialog>`, `structuredClone`, and `DecompressionStream('deflate-raw')` for ZIP files.
 
 Run the message classification regression check with `node tests/response-classification.test.js`.
 Run the ZIP import check with `node tests/import.test.js`.
+Run the Google Contacts and backup check with `node tests/contacts-import.test.js`.
 
 ## License
 

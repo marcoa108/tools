@@ -7,6 +7,7 @@ const zlib = require('node:zlib');
 const context = { Date, URL, Map, Set, Array, Number, String, JSON, Blob, TextDecoder, DecompressionStream, Uint8Array, DataView, Promise };
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../zip-reader.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../contacts.js'), 'utf8'), context);
 const source = fs.readFileSync(path.join(__dirname, '../app.js'), 'utf8').replace(
   '  init();\n})();',
   '  globalThis.testAPI={prepareZip,parseBackup,normalizePerson,hasNoRecordedIncoming,hasTwoWayExchange,setState(v){state=v}};\n})();'
@@ -33,9 +34,9 @@ const person = slug=>'https://www.linkedin.com/in/'+slug+'/';
   const dana=app.normalizePerson({first:'Dana',last:'Example',company:'Example Co',url:person('dana'),note:'Offer a relevant introduction'});
   app.setState({version:1,people:[dana],groups:[{id:'group-1',name:'Peers',ids:[dana.id]}],invites:[{id:'outgoing|'+person('pat').replace(/\/$/,'')+'|2026-10-01',status:'interesting',action:'Research their work'}],sample:false,messagesMeta:null});
   const archive=zip({
-    'Connections.csv':csv([['First Name','Last Name','URL','Company','Position','Connected On'],['Dana','Example',person('dana'),'Example Co','CEO','1 Oct 2026'],['Eli','Example',person('eli'),'Example Co','Founder','2 Oct 2026']]),
+    'connections':'Notes:\n"Email addresses may be missing from the export."\n\n'+csv([['First Name','Last Name','URL','Company','Position','Connected On'],['Dana','Example',person('dana'),'Example Co','CEO','1 Oct 2026'],['Eli','Example',person('eli'),'Example Co','Founder','2 Oct 2026']]),
     'Profile.csv':csv([['First Name','Last Name'],['Me','Example']]),
-    'messages.csv':csv([['CONVERSATION ID','FROM','SENDER PROFILE URL','TO','RECIPIENT PROFILE URLS','DATE','CONTENT'],['thread-1','Dana Example',person('dana'),'Me Example',person('me'),'2026-10-02','Hello'],['thread-2','Me Example',person('me'),'Dana Example',person('dana'),'2026-10-03','Thank you'],['thread-3','Me Example',person('me'),'Eli Example',person('eli'),'2026-10-04','board peer advisory']]),
+    'Messages':csv([['CONVERSATION ID','FROM','SENDER PROFILE URL','TO','RECIPIENT PROFILE URLS','DATE','CONTENT'],['thread-1','Dana Example',person('dana'),'Me Example',person('me'),'2026-10-02','Hello'],['thread-2','Me Example',person('me'),'Dana Example',person('dana'),'2026-10-03','Thank you'],['thread-3','Me Example',person('me'),'Eli Example',person('eli'),'2026-10-04','board peer advisory']]),
     'Invitations.csv':csv([['From','To','Sent At','Message','Direction','inviterProfileUrl','inviteeProfileUrl'],['Me Example','Dana Example','2026-09-01','', 'OUTGOING',person('me'),person('dana')],['Me Example','Pat Prospect','2026-10-01','board peer advisory', 'OUTGOING',person('me'),person('pat')],['Riley Prospect','Me Example','2026-10-02','', 'INCOMING',person('riley'),person('me')]]),
     'Recommendations_Received.csv':csv([['First Name','Last Name','Text'],['Dana','Example','Great work']]),
     'Endorsement_Given_Info.csv':csv([['Endorsee First Name','Endorsee Last Name','Endorsee Public Url','Endorsement Status'],['Dana','Example','www.linkedin.com/in/dana/','ACCEPTED'],['Dana','Example','www.linkedin.com/in/dana/','PENDING']]),
@@ -43,6 +44,7 @@ const person = slug=>'https://www.linkedin.com/in/'+slug+'/';
   });
   const files=await context.readLinkedInZip({size:archive.length,arrayBuffer:async()=>archive.buffer.slice(archive.byteOffset,archive.byteOffset+archive.length)});
   assert.equal(files['searchqueries.csv'],undefined);
+  assert.ok(files['connections.csv'] && files['messages.csv'],'Case and extension variations are recognized');
   const report=app.prepareZip(files);
   assert.equal(report.incoming,2);
   assert.equal(report.people[0].note,'Offer a relevant introduction');
