@@ -22,7 +22,7 @@ LinkedIn may change the names and columns of its exports. The app currently expe
 
 ## Communication signals
 
-After importing messages, the app shows outgoing and incoming counts, the latest exchange, recent activity, whether a contact replied, and communication frequency. It excludes unclear and group conversations. A **Vistage** match means an outgoing message contains both `board` and `peer advisory`; a one-phrase match is marked for review. Phrase matches are clues, not a claim about the person's interest or consent.
+After importing messages, the app shows outgoing and incoming counts, the latest exchange, recent activity, and communication frequency. A two-way exchange means at least one matched message in each direction, even if your message was the latest one or the messages appear in separate threads. The “no incoming” group contains only contacts with an outgoing message and no matched incoming message in the import. It excludes unclear and group conversations. A **Vistage** match means an outgoing message contains both `board` and `peer advisory`; a one-phrase match is marked for review. Phrase matches are clues, not a claim about the person's interest or consent.
 
 The raw message bodies are read in memory for analysis and are not saved in the workspace or backup. The backup contains connection information, your annotations, and derived communication summaries; treat it as sensitive.
 
@@ -37,6 +37,8 @@ This tool does not send messages, post content, or access LinkedIn automatically
 ## Development
 
 Edit the three files directly. No dependencies or build command are needed. The app uses modern browser APIs such as IndexedDB, `<dialog>`, and `structuredClone`.
+
+Run the message classification regression check with `node tests/response-classification.test.js`.
 
 ## License
 
