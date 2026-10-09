@@ -126,7 +126,7 @@
   function requestMessageIdentity(source,label,suggestedName=''){pendingMessagesSource=source;$('messages-selected-file').textContent=label;$('messages-error').hidden=true;$('messages-own-name').value=suggestedName||state.messagesMeta?.ownerName||'';$('messages-dialog').showModal();}
   async function receiveMessagesFile(event){event.preventDefault();const source=pendingMessagesSource,error=$('messages-error');error.hidden=true;if(!source)return;
     const submit=$('messages-submit');submit.disabled=true;submit.textContent='Analyzing…';
-    try{const owner=$('messages-own-name').value,url=$('messages-own-url').value;if(source.zipFiles){const prepared=prepareZip(source.zipFiles,owner,url);if(prepared.messageError)throw new Error(prepared.messageError);$('messages-dialog').close();showZipPreview(prepared);return;}const report=analyzeMessagesCSV(await source.file.text(),owner,url);for(const p of state.people)p.comms=report.byId.get(p.id);state.messagesMeta=report.meta;filters=defaultFilters();syncControls();page=0;await saveDB();$('messages-dialog').close();render();notify(`Matched ${report.meta.matchedMessages.toLocaleString()} messages across ${report.meta.matchedPeople.toLocaleString()} connections.`);}
+    try{const owner=$('messages-own-name').value,url=$('messages-own-url').value;if(source.zipFiles){const prepared=prepareZip(source.zipFiles,owner,url);if(prepared.messageError)throw new Error(prepared.messageError);$('messages-dialog').close();showZipPreview(prepared);return;}const report=analyzeMessagesCSV(await source.file.text(),owner,url);for(const p of state.people)p.comms=report.byId.get(p.id);state.messagesMeta=report.meta;filters=defaultFilters();syncControls();page=0;await saveDB();$('messages-dialog').close();setView('explore');notify(`Matched ${report.meta.matchedMessages.toLocaleString()} messages across ${report.meta.matchedPeople.toLocaleString()} connections.`);}
     catch(e){error.textContent=e.message||'Could not analyze this CSV.';error.hidden=false;}
     finally{submit.disabled=false;submit.textContent='Analyze messages';}
   }
@@ -203,7 +203,7 @@
     if(Object.keys(report.trust.counts).length)for(const p of state.people){const next=report.trust.signals.get(p.id)||normalizeTrust({});p.trust={...normalizeTrust(p.trust||{}),...Object.fromEntries(Object.keys(report.trust.counts).map(key=>[key,next[key]]))};}
     reconcileGoogleContacts();
     state.importMeta={importedAt:new Date().toISOString(),files:report.files};
-    stagedImport=null;filters=defaultFilters();syncControls();page=0;view='explore';await saveDB();$('zip-dialog').close();render();notify('LinkedIn export imported. Notes and priority groups were kept.');
+    stagedImport=null;filters=defaultFilters();syncControls();page=0;await saveDB();$('zip-dialog').close();setView('explore');notify('LinkedIn export imported. Notes and priority groups were kept.');
   }
   function parseBackup(raw) {
     const data=JSON.parse(raw);
@@ -222,7 +222,7 @@
         if(google){stageGoogleContacts(parseGoogleFiles(files));return;}const prepared=prepareZip(files);if(prepared.messageError&&files['messages.csv']){requestMessageIdentity({zipFiles:files},file.name,prepared.ownerName);return;}showZipPreview(prepared);return;
       }
       const raw=await file.text();
-      if(/\.json$/i.test(file.name)){const imported=parseBackup(raw),apply=()=>{state=imported;filters=defaultFilters();syncControls();page=0;view='explore';saveDB();render();notify(`Restored ${state.people.length.toLocaleString()} people and ${state.groups.length} groups.`);};if(state.people.length||state.contacts.length)confirmAction('Restore this backup?','This will replace people, contacts, notes and groups in this browser. Download a backup first if needed.',apply);else apply();return;}
+      if(/\.json$/i.test(file.name)){const imported=parseBackup(raw),apply=()=>{state=imported;filters=defaultFilters();syncControls();page=0;saveDB();setView('explore');notify(`Restored ${state.people.length.toLocaleString()} people and ${state.groups.length} groups.`);};if(state.people.length||state.contacts.length)confirmAction('Restore this backup?','This will replace people, contacts, notes and groups in this browser. Download a backup first if needed.',apply);else apply();return;}
       if(/\.vcf$/i.test(file.name)){stageGoogleContacts(NetworkContacts.parseVCF(raw));return;}
       const rows=csvRows(raw).slice(0,12),messages=rows.some(r=>{const h=r.map(x=>x.trim().toLowerCase());return ['from','to','date','content'].every(x=>h.includes(x));});
       if(messages){if(!state.people.length||state.sample)throw new Error('Import LinkedIn connections before messages.');requestMessageIdentity({file},file.name);return;}
@@ -230,7 +230,7 @@
       if(header){stageGoogleContacts(NetworkContacts.parseCSV(raw,csvRows));return;}
       const incoming=parseCSV(raw);state.people=mergeConnections(incoming);
       if(state.sample){state.groups=[];state.messagesMeta=null;state.invites=[];state.sample=false;}
-      reconcileGoogleContacts();filters=defaultFilters();syncControls();page=0;view='explore';await saveDB();render();notify(`Imported ${incoming.length.toLocaleString()} connections. Existing notes kept.`);
+      reconcileGoogleContacts();filters=defaultFilters();syncControls();page=0;await saveDB();setView('explore');notify(`Imported ${incoming.length.toLocaleString()} connections. Existing notes kept.`);
     }catch(e){notify(e.message||'Could not read this file.');}
     finally{$('file-input').value='';}
   }
