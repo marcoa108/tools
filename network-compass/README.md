@@ -13,14 +13,14 @@ A private, browser-based workspace for exploring LinkedIn connections, understan
    ```
 
    Then visit `http://localhost:8000`. Keep `index.html`, `app.js`, `contacts.js`, `zip-reader.js`, and `style.css` together.
-2. Export your LinkedIn data and choose the ZIP using **Import LinkedIn ZIP or CSV**. The import preview shows what was recognized before anything is saved. You can still import `Connections.csv` on its own or use **Explore sample data**.
-3. The ZIP importer reads `Connections.csv`, `Messages.csv`, `Invitations.csv`, recommendations, accepted endorsements, and `Profile.csv` for your name. It accepts capitalization variants and extensionless `Connections` and `Messages` files. It skips the introductory notes above the `First Name` header in a connections export. Only supported files are extracted. You can also import `Messages.csv` separately using **Import messages** and entering your identity.
+2. Use **Import files** for a LinkedIn ZIP, `Connections.csv`, `Messages.csv`, a Google Contacts CSV or Takeout ZIP, a vCard, or a Network Compass JSON backup. Import LinkedIn connections before a standalone messages file. The ZIP and contacts previews show what was recognized before anything is saved; a standalone messages file asks for your LinkedIn identity before analysis. You can also use **Explore sample data**.
+3. The LinkedIn ZIP importer reads `Connections.csv`, `Messages.csv`, `Invitations.csv`, recommendations, accepted endorsements, and `Profile.csv` for your name. It accepts capitalization variants and extensionless `Connections` and `Messages` files. It skips the introductory notes above the `First Name` header in a connections export. Only supported files are extracted. When a ZIP has messages but no usable profile identity, the same import flow asks for your name or profile URL before previewing the ZIP.
 4. Use **Invitation review** for people absent from the current connections export. Mark interesting prospects and record a personal next step. The export does not include invitation outcome, so the list does not assert that an invitation is pending.
-5. In **Contacts review**, import a Google Contacts CSV or Google Takeout ZIP containing CSV or vCard (`.vcf`) files. You can import contacts before or after LinkedIn. The app combines repeated vCards, matches a contact to a LinkedIn person only when the normalized full name is unique on both sides, and attaches that contact's email addresses and available city, region, and country. Ambiguous names stay in review. The main network contains only LinkedIn connections and contacts you explicitly add. Filter the review queue, choose Personal, Family, Business or a custom category, and add selected contacts to the network when appropriate.
+5. In **Contacts review**, view contacts imported with the main button from a Google Contacts CSV or Google Takeout ZIP containing CSV or vCard (`.vcf`) files. You can import contacts before or after LinkedIn. The app combines repeated vCards, matches a contact to a LinkedIn person only when the normalized full name is unique on both sides, and attaches that contact's email addresses and available city, region, and country. Ambiguous names stay in review. The main network contains only LinkedIn connections and contacts you explicitly add. Filter the review queue, choose Personal, Family, Business or a custom category, and add selected contacts to the network when appropriate.
 6. Filter the network by role, company, date, relationship circle, theme, fit, warmth, communications, country, region, and city. Review a person to edit their location and open a shared company record for industry, employee count, currency, and annual revenue and profit. Company numbers are manual fields; the app does not fetch financial data. Save priority groups with an objective, value ideas, and a next step.
 7. Use **Download backup** to save your people, contact categories, company records, prospect queue, and derived communication summaries as JSON. Import that backup to restore this browser workspace or move it to another device.
 
-LinkedIn may change the names and columns of its exports. The app expects connection names and message columns including `FROM`, `TO`, `DATE`, and `CONTENT`. ZIP imports are limited to 100 MB compressed and supported CSVs to 120 MB uncompressed in total.
+LinkedIn may change the names and columns of its exports. The app expects connection names and message columns including `FROM`, `TO`, `DATE`, and `CONTENT`. ZIP imports are limited to 100 MB compressed and supported files to 120 MB uncompressed in total. Direct files are limited to 80 MB.
 
 ## Communication signals
 
@@ -43,6 +43,7 @@ Edit the five site files directly. No dependencies or build command are needed. 
 Run the message classification regression check with `node tests/response-classification.test.js`.
 Run the ZIP import check with `node tests/import.test.js`.
 Run the Google Contacts and backup check with `node tests/contacts-import.test.js`.
+Run the shared import picker check with `node tests/unified-import.test.js`.
 
 ## License
 
