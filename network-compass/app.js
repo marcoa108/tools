@@ -210,7 +210,7 @@
     stagedImport=null;filters=defaultFilters();syncControls();page=0;await saveDB();$('zip-dialog').close();setView('explore');notify('LinkedIn export imported. Notes and priority groups were kept.');
   }
   function parseBackup(raw) {
-    const data=JSON.parse(raw);
+    const data=typeof raw==='string'?JSON.parse(raw):raw;
     if(data.version!==1||!Array.isArray(data.people)||!Array.isArray(data.groups)||data.people.length>100000||data.groups.length>1000||data.invites?.length>100000||data.contacts?.length>100000||data._catalog?.length>100000)throw new Error('This is not a valid Network Compass backup.');
     const restored=restoreState(data);
     restored.groups=data.groups.map(g=>({id:safe(g.id,100),name:safe(g.name,80),ids:Array.isArray(g.ids)?g.ids.map(x=>safe(x,600)).slice(0,100000):[],objective:safe(g.objective,500),next:safe(g.next,500),ideas:Array.isArray(g.ideas)?g.ideas.map(x=>safe(x,400)).slice(0,10):[],created:dateISO(g.created)})).filter(g=>g.id&&g.name);
@@ -232,7 +232,7 @@
         if(google){stageGoogleContacts(parseGoogleFiles(files));return;}const prepared=prepareZip(files);if(prepared.messageError&&files['messages.csv']){requestMessageIdentity({zipFiles:files},file.name,prepared.ownerName);return;}showZipPreview(prepared);return;
       }
       const raw=await file.text();
-      if(/\.json$/i.test(file.name)){const imported=parseBackup(raw),backup=JSON.parse(raw),apply=async()=>{if(Array.isArray(backup._catalog)){const records=backup._catalog.filter(x=>x&&CompanyImport.url(x.detailUrl)&&x.name).slice(0,100000);await storeCatalog(records);}state=imported;filters=defaultFilters();syncControls();page=0;await saveDB();setView('explore');notify(`Restored ${state.people.length.toLocaleString()} people and ${state.groups.length} groups.`);};if(state.people.length||state.contacts.length||catalog.length)confirmAction('Restore this backup?','This will replace people, contacts, notes and groups in this browser. Download a backup first if needed.',apply);else await apply();return;}
+      if(/\.json$/i.test(file.name)){const backup=JSON.parse(raw),imported=parseBackup(backup),apply=async()=>{if(Array.isArray(backup._catalog)){const records=backup._catalog.filter(x=>x&&CompanyImport.url(x.detailUrl)&&x.name).slice(0,100000);await storeCatalog(records);}state=imported;filters=defaultFilters();syncControls();page=0;await saveDB();setView('explore');notify(`Restored ${state.people.length.toLocaleString()} people and ${state.groups.length} groups.`);};if(state.people.length||state.contacts.length||catalog.length)confirmAction('Restore this backup?','This will replace people, contacts, notes and groups in this browser. Download a backup first if needed.',apply);else await apply();return;}
       if(/\.vcf$/i.test(file.name)){stageGoogleContacts(NetworkContacts.parseVCF(raw));return;}
       if(/\.csv$/i.test(file.name)&&raw.slice(0,3000).toLowerCase().includes('detail_url')){stageCompanyImport(CompanyImport.parseCSV(raw,csvRows));return;}
       const rows=csvRows(raw).slice(0,12),messages=rows.some(r=>{const h=r.map(x=>x.trim().toLowerCase());return ['from','to','date','content'].every(x=>h.includes(x));});
