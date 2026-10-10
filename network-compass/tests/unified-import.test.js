@@ -15,6 +15,7 @@ const context={Date,URL,Map,Set,Array,Number,String,JSON,Blob,Promise,TextDecode
   readLinkedInZip:async file=>file.archive};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync(path.join(root,'contacts.js'),'utf8'),context);
+vm.runInContext(fs.readFileSync(path.join(root,'company-import.js'),'utf8'),context);
 vm.runInContext(fs.readFileSync(path.join(root,'app.js'),'utf8').replace(
   '  init();\n})();',
   '  globalThis.testAPI={receiveFile,receiveMessagesFile,normalizePerson,setState(v){state=v},getStaged(){return stagedImport}};\n})();'

@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const zlib=require('node:zlib');
 const context={Date,URL,Map,Set,Array,Number,String,JSON,Blob,TextDecoder,DecompressionStream,Uint8Array,DataView,Promise};
 vm.createContext(context);
-for(const file of ['zip-reader.js','contacts.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context);
+for(const file of ['zip-reader.js','contacts.js','company-import.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context);
 vm.runInContext(fs.readFileSync(path.join(__dirname,'../app.js'),'utf8').replace('  init();\n})();','  globalThis.testAPI={parseCSV,csvRows,parseGoogleFiles,parseBackup,normalizePerson,reconcileGoogleContacts,addContactsToPeople,setState(v){state=v},getState(){return state}};\n})();'),context);
 const app=context.testAPI,google=context.NetworkContacts;
 const csv=rows=>rows.map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n');
