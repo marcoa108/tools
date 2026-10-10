@@ -1,4 +1,4 @@
-/* Optional on-demand Top Aziende fetch endpoint. Deploy only with account owner's approval.
+/* On-demand Top Aziende fetch endpoint, deployed with account owner's approval.
    It accepts a public company URL and never receives Network Compass contacts or notes. */
 const appOrigin = 'https://marcoa108.github.io';
 const sourceHost = 'topaziende.quotidiano.net';
