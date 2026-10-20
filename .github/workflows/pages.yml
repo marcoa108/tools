@@ -1,0 +1,60 @@
+name: Deploy Network Compass to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'network-compass/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: network-compass-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout public source
+        uses: actions/checkout@v4
+      - name: Validate public asset allowlist
+        run: |
+          node --check network-compass/app.js
+          node --check network-compass/contacts.js
+          node --check network-compass/message-import.js
+          node --check network-compass/company-import.js
+          node --check network-compass/private-company-loader.js
+          node --check network-compass/zip-reader.js
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const allowed=['index.html','style.css','app.js','contacts.js','company-import.js','message-import.js','private-company-loader.js','zip-reader.js'].sort();
+          const actual=fs.readdirSync('network-compass').sort();
+          if(JSON.stringify(actual)!==JSON.stringify(allowed)) throw Error('Unexpected file in public asset directory');
+          NODE
+      - name: Stage ONLY public application files
+        run: |
+          mkdir -p _site/network-compass
+          for name in index.html style.css app.js contacts.js company-import.js message-import.js private-company-loader.js zip-reader.js; do
+            cp "network-compass/$name" "_site/network-compass/$name"
+          done
+          touch _site/.nojekyll
+          test ! -d _site/_private
+          test ! -e _site/network-compass/company-data.json
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - name: Publish Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
